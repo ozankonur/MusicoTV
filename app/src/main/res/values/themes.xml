@@ -1,0 +1,4 @@
+<resources>
+
+    <style name="Theme.MusicoTV" parent="@style/Theme.Leanback" />
+</resources>
