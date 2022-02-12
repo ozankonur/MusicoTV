@@ -83,7 +83,7 @@ class MainFragment : BrowseSupportFragment() {
     private fun loadRows() {
         val rowsAdapter = ArrayObjectAdapter(ListRowPresenter())
         val cardPresenter = CardPresenter()
-        var allMusicSize = 0
+        var allMusicSize: Int
         viewModel.musicResponse.observe(viewLifecycleOwner, {
             rowsAdapter.clear()
             viewModel.musicResponse.value.let { allMusics ->

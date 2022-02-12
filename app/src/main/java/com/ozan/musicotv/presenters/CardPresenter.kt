@@ -47,16 +47,14 @@ class CardPresenter : Presenter() {
         val cardView = viewHolder.view as ImageCardView
 
         Log.d(TAG, "onBindViewHolder")
-        if (music.artworkUrl100 != null) {
-            cardView.titleText = music.name
-            cardView.contentText = music.releaseDate
-            cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT)
-            Glide.with(viewHolder.view.context)
-                .load(music.artworkUrl100)
-                .centerCrop()
-                .error(mDefaultCardImage)
-                .into(cardView.mainImageView)
-        }
+        cardView.titleText = music.name
+        cardView.contentText = music.releaseDate
+        cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT)
+        Glide.with(viewHolder.view.context)
+            .load(music.artworkUrl100)
+            .centerCrop()
+            .error(mDefaultCardImage)
+            .into(cardView.mainImageView)
     }
 
     override fun onUnbindViewHolder(viewHolder: ViewHolder) {
