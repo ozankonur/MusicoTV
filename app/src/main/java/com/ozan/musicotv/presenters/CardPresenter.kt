@@ -9,7 +9,7 @@ import android.view.ViewGroup
 
 import com.bumptech.glide.Glide
 import com.ozan.musicotv.R
-import com.ozan.musicotv.data.model.LocalResult
+import com.ozan.musicotv.data.network.entity.Result
 import kotlin.properties.Delegates
 
 /**
@@ -21,13 +21,13 @@ class CardPresenter : Presenter() {
     private var sSelectedBackgroundColor: Int by Delegates.notNull()
     private var sDefaultBackgroundColor: Int by Delegates.notNull()
 
-    override fun onCreateViewHolder(parent: ViewGroup): Presenter.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup): ViewHolder {
         Log.d(TAG, "onCreateViewHolder")
 
         sDefaultBackgroundColor = ContextCompat.getColor(parent.context, R.color.default_background)
         sSelectedBackgroundColor =
             ContextCompat.getColor(parent.context, R.color.selected_background)
-        mDefaultCardImage = ContextCompat.getDrawable(parent.context, R.drawable.movie)
+        mDefaultCardImage = ContextCompat.getDrawable(parent.context, R.drawable.musicback)
 
         val cardView = object : ImageCardView(parent.context) {
             override fun setSelected(selected: Boolean) {
@@ -39,11 +39,11 @@ class CardPresenter : Presenter() {
         cardView.isFocusable = true
         cardView.isFocusableInTouchMode = true
         updateCardBackgroundColor(cardView, false)
-        return Presenter.ViewHolder(cardView)
+        return ViewHolder(cardView)
     }
 
-    override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any) {
-        val music = item as LocalResult
+    override fun onBindViewHolder(viewHolder: ViewHolder, item: Any) {
+        val music = item as Result
         val cardView = viewHolder.view as ImageCardView
 
         Log.d(TAG, "onBindViewHolder")
@@ -59,7 +59,7 @@ class CardPresenter : Presenter() {
         }
     }
 
-    override fun onUnbindViewHolder(viewHolder: Presenter.ViewHolder) {
+    override fun onUnbindViewHolder(viewHolder: ViewHolder) {
         Log.d(TAG, "onUnbindViewHolder")
         val cardView = viewHolder.view as ImageCardView
         // Remove references to images so that the garbage collector can free up memory

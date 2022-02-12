@@ -1,7 +1,8 @@
 package com.ozan.musicotv.presenters
 
+import android.util.TypedValue
 import androidx.leanback.widget.AbstractDetailsDescriptionPresenter
-import com.ozan.musicotv.data.model.LocalResult
+import com.ozan.musicotv.data.network.entity.Result
 
 class DetailsDescriptionPresenter : AbstractDetailsDescriptionPresenter() {
 
@@ -9,10 +10,13 @@ class DetailsDescriptionPresenter : AbstractDetailsDescriptionPresenter() {
         viewHolder: ViewHolder,
         item: Any
     ) {
-        val music = item as LocalResult
+        val music = item as Result
+        viewHolder.title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 50F)
+        viewHolder.subtitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 30F)
+        viewHolder.body.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20F)
 
-        viewHolder.title.text = music.artistName
-        viewHolder.subtitle.text = music.releaseDate
-        viewHolder.body.text = music.contentAdvisoryRating
+        viewHolder.title.text = music.name
+        viewHolder.subtitle.text = music.artistName
+        viewHolder.body.text = music.artistUrl
     }
 }

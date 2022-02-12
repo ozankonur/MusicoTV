@@ -3,6 +3,7 @@ package com.ozan.musicotv.data.network.entity
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
+import java.io.Serializable
 
 data class Genre(
     @SerializedName("genreId")
@@ -14,4 +15,4 @@ data class Genre(
     @SerializedName("url")
     @Expose
     var url: String
-)
+) : Serializable

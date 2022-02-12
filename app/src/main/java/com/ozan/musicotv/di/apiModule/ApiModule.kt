@@ -3,14 +3,12 @@ package com.ozan.musicotv.di.apiModule
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.ozan.musicotv.BuildConfig
-import com.ozan.musicotv.data.model.LocalMusicResponse
 import com.ozan.musicotv.data.network.NetworkManager
 import com.ozan.musicotv.data.network.NetworkManagerImpl
 import com.ozan.musicotv.data.network.entity.MusicResponse
 import com.ozan.musicotv.data.network.retrofit.RetrofitInterface
 import com.ozan.musicotv.data.network.retrofit.RetrofitService
 import com.ozan.musicotv.data.network.retrofit.RetrofitServiceImpl
-import com.ozan.musicotv.data.network.util.ApiMapper
 import com.ozan.musicotv.util.mapper.EntityMapper
 import dagger.Module
 import dagger.Provides
@@ -56,13 +54,7 @@ class ApiModule {
 
     @Singleton
     @Provides
-    fun provideApiMapper(): EntityMapper<MusicResponse, LocalMusicResponse> {
-        return ApiMapper()
-    }
-
-    @Singleton
-    @Provides
     fun provideNetworkManager(retrofitService: RetrofitService): NetworkManager {
-        return NetworkManagerImpl(retrofitService, ApiMapper())
+        return NetworkManagerImpl(retrofitService)
     }
 }

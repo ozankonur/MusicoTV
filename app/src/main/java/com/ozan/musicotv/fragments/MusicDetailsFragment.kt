@@ -2,46 +2,37 @@ package com.ozan.musicotv.fragments
 
 import android.content.Context
 import android.content.Intent
-import android.os.Bundle
+import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
-import androidx.leanback.app.DetailsSupportFragment
-import androidx.leanback.app.DetailsSupportFragmentBackgroundController
-import androidx.leanback.widget.Action
-import androidx.leanback.widget.ArrayObjectAdapter
-import androidx.leanback.widget.ClassPresenterSelector
-import androidx.leanback.widget.DetailsOverviewRow
-import androidx.leanback.widget.FullWidthDetailsOverviewRowPresenter
-import androidx.leanback.widget.FullWidthDetailsOverviewSharedElementHelper
-import androidx.leanback.widget.HeaderItem
-import androidx.leanback.widget.ImageCardView
-import androidx.leanback.widget.ListRow
-import androidx.leanback.widget.ListRowPresenter
-import androidx.leanback.widget.OnActionClickedListener
-import androidx.leanback.widget.OnItemViewClickedListener
-import androidx.leanback.widget.Presenter
-import androidx.leanback.widget.Row
-import androidx.leanback.widget.RowPresenter
-import androidx.core.app.ActivityOptionsCompat
-import androidx.core.content.ContextCompat
+import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-
+import androidx.core.app.ActivityOptionsCompat
+import androidx.core.content.ContextCompat
+import androidx.leanback.app.DetailsSupportFragment
+import androidx.leanback.app.DetailsSupportFragmentBackgroundController
+import androidx.leanback.widget.*
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.target.SimpleTarget
+import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
 import com.ozan.musicotv.*
 import com.ozan.musicotv.activites.DetailsActivity
 import com.ozan.musicotv.activites.MainActivity
-import com.ozan.musicotv.data.model.LocalResult
-import com.ozan.musicotv.presenters.CardPresenter
+import com.ozan.musicotv.data.network.entity.Result
 import com.ozan.musicotv.presenters.DetailsDescriptionPresenter
 import dagger.hilt.android.AndroidEntryPoint
+import kotlin.math.roundToInt
+import android.net.Uri
+
+
+
 
 @AndroidEntryPoint
 class MusicDetailsFragment : DetailsSupportFragment() {
 
-    private var mSelectedMusic: LocalResult? = null
-
+    private var mSelectedMusic: Result? = null
     private lateinit var mDetailsBackground: DetailsSupportFragmentBackgroundController
     private lateinit var mPresenterSelector: ClassPresenterSelector
     private lateinit var mAdapter: ArrayObjectAdapter
@@ -52,14 +43,15 @@ class MusicDetailsFragment : DetailsSupportFragment() {
 
         mDetailsBackground = DetailsSupportFragmentBackgroundController(this)
 
-        mSelectedMusic = requireActivity().intent.getSerializableExtra(DetailsActivity.Music) as LocalResult
+        mSelectedMusic =
+            requireActivity().intent.getSerializableExtra(DetailsActivity.Music) as Result
         if (mSelectedMusic != null) {
             mPresenterSelector = ClassPresenterSelector()
             mAdapter = ArrayObjectAdapter(mPresenterSelector)
             setupDetailsOverviewRow()
             setupDetailsOverviewRowPresenter()
-            setupRelatedMusicListRow()
             adapter = mAdapter
+            initializeBackground(mSelectedMusic)
             onItemViewClickedListener = ItemViewClickedListener()
         } else {
             val intent = Intent(requireActivity(), MainActivity::class.java)
@@ -67,26 +59,47 @@ class MusicDetailsFragment : DetailsSupportFragment() {
         }
     }
 
+    private fun initializeBackground(result: Result?) {
+        mDetailsBackground.enableParallax()
+        val highImage = result?.artworkUrl100?.replace("100x100bb.jpg","400x400bb.jpg")
+        Glide.with(requireActivity())
+            .asBitmap()
+            .fitCenter()
+            .error(R.drawable.default_background)
+            .load(highImage)
+            .into<SimpleTarget<Bitmap>>(object : SimpleTarget<Bitmap>() {
+                override fun onResourceReady(
+                    bitmap: Bitmap,
+                    transition: Transition<in Bitmap>?
+                ) {
+                    mDetailsBackground.coverBitmap = bitmap
+                    mAdapter.notifyArrayItemRangeChanged(0, mAdapter.size())
+                }
+            })
+    }
+
     private fun setupDetailsOverviewRow() {
         Log.d(TAG, "doInBackground: " + mSelectedMusic?.toString())
         val row = DetailsOverviewRow(mSelectedMusic)
-        row.imageDrawable = ContextCompat.getDrawable(requireActivity(),
+        row.imageDrawable = ContextCompat.getDrawable(
+            requireActivity(),
             R.drawable.default_background
         )
         val width = convertDpToPixel(requireActivity(), DETAIL_THUMB_WIDTH)
         val height = convertDpToPixel(requireActivity(), DETAIL_THUMB_HEIGHT)
         Glide.with(requireActivity())
             .load(mSelectedMusic?.artworkUrl100)
-            .centerCrop()
+            .fitCenter()
             .error(R.drawable.default_background)
-            .into<SimpleTarget<Drawable>>(object : SimpleTarget<Drawable>(width, height) {
+            .into<CustomTarget<Drawable>>(object : CustomTarget<Drawable>(width, height) {
                 override fun onResourceReady(
                     drawable: Drawable,
                     transition: Transition<in Drawable>?
                 ) {
-                    Log.d(TAG, "details overview card image url ready: " + drawable)
                     row.imageDrawable = drawable
                     mAdapter.notifyArrayItemRangeChanged(0, mAdapter.size())
+                }
+                override fun onLoadCleared(placeholder: Drawable?) {
                 }
             })
 
@@ -94,23 +107,14 @@ class MusicDetailsFragment : DetailsSupportFragment() {
 
         actionAdapter.add(
             Action(
-                ACTION_WATCH_TRAILER,
-                resources.getString(R.string.watch_trailer_1),
-                resources.getString(R.string.watch_trailer_2)
+                ACTION_LISTEN,
+                resources.getString(R.string.listen_trailer)
             )
         )
         actionAdapter.add(
             Action(
-                ACTION_RENT,
-                resources.getString(R.string.rent_1),
-                resources.getString(R.string.rent_2)
-            )
-        )
-        actionAdapter.add(
-            Action(
-                ACTION_BUY,
-                resources.getString(R.string.buy_1),
-                resources.getString(R.string.buy_2)
+                ACTION_SHARE,
+                resources.getString(R.string.listen_share),
             )
         )
         row.actionsAdapter = actionAdapter
@@ -131,27 +135,20 @@ class MusicDetailsFragment : DetailsSupportFragment() {
         )
         detailsPresenter.setListener(sharedElementHelper)
         detailsPresenter.isParticipatingEntranceTransition = true
-
-        mPresenterSelector.addClassPresenter(DetailsOverviewRow::class.java, detailsPresenter)
-    }
-
-    private fun setupRelatedMusicListRow() {
-        val subcategories = arrayOf(getString(R.string.related_Musics))
-        val list = arrayOf<String>()
-
-        val listRowAdapter = ArrayObjectAdapter(CardPresenter())
-        for (j in 0 until NUM_COLS) {
-            listRowAdapter.add(list[j % 5])
+        detailsPresenter.onActionClickedListener = OnActionClickedListener { action ->
+            if (action.id == ACTION_LISTEN) {
+                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(mSelectedMusic?.url))
+                startActivity(browserIntent)
+            } else {
+                Toast.makeText(requireActivity(), action.toString(), Toast.LENGTH_SHORT).show()
+            }
         }
-
-        val header = HeaderItem(0, subcategories[0])
-        mAdapter.add(ListRow(header, listRowAdapter))
-        mPresenterSelector.addClassPresenter(ListRow::class.java, ListRowPresenter())
+        mPresenterSelector.addClassPresenter(DetailsOverviewRow::class.java, detailsPresenter)
     }
 
     private fun convertDpToPixel(context: Context, dp: Int): Int {
         val density = context.applicationContext.resources.displayMetrics.density
-        return Math.round(dp.toFloat() * density)
+        return (dp.toFloat() * density).roundToInt()
     }
 
     private inner class ItemViewClickedListener : OnItemViewClickedListener {
@@ -161,8 +158,7 @@ class MusicDetailsFragment : DetailsSupportFragment() {
             rowViewHolder: RowPresenter.ViewHolder,
             row: Row
         ) {
-            if (item is LocalResult) {
-                Log.d(TAG, "Item: " + item.toString())
+            if (item is Result) {
                 val intent = Intent(requireActivity(), DetailsActivity::class.java)
                 intent.putExtra(resources.getString(R.string.Music), mSelectedMusic)
 
@@ -179,15 +175,12 @@ class MusicDetailsFragment : DetailsSupportFragment() {
     }
 
     companion object {
-        private val TAG = "VideoDetailsFragment"
+        private const val TAG = "VideoDetailsFragment"
 
-        private val ACTION_WATCH_TRAILER = 1L
-        private val ACTION_RENT = 2L
-        private val ACTION_BUY = 3L
+        private const val ACTION_LISTEN = 1L
+        private const val ACTION_SHARE = 2L
 
-        private val DETAIL_THUMB_WIDTH = 274
-        private val DETAIL_THUMB_HEIGHT = 274
-
-        private val NUM_COLS = 10
+        private const val DETAIL_THUMB_WIDTH = 500
+        private const val DETAIL_THUMB_HEIGHT = 500
     }
 }
