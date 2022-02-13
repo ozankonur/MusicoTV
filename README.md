@@ -1,5 +1,5 @@
 # MusicoTV
-- Android TV (Leanback)
+- Android TV (Leanback) - USE on TV
 - MVVM Architecture 
 - Repository & Network Layers
 - Hilt for DI
